@@ -57,6 +57,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/lib/components/ui/pop
 import { uploadImage } from "../../../../lib/actions";
 import { useToast } from "../../../../hooks/use-toast";
 import beautify from "js-beautify";
+import "prosemirror-view/style/prosemirror.css";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
@@ -106,6 +107,19 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 blockquote: true,
                 codeBlock: true,
                 history: true,
+                bulletList: {
+                    keepMarks: true,
+                    keepAttributes: false,
+                },
+                orderedList: {
+                    keepMarks: true,
+                    keepAttributes: false,
+                },
+                listItem: {
+                    HTMLAttributes: {
+                        class: 'prose-list-item',
+                    },
+                },
             }),
             Link.configure({
                 openOnClick: false,
@@ -155,24 +169,42 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 },
             }),
         ],
-        content: initialContent,
+        content: initialContent || '<p></p>',
+        parseOptions: {
+            preserveWhitespace: false,
+        },
         onUpdate: ({ editor }) => {
             const currentHtml = editor.getHTML();
+            console.log('Editor content updated:', currentHtml);
             onChange(currentHtml);
             setHtmlCode(currentHtml);
         },
-        editorProps: { attributes: { class: "ProseMirror" } },
+        editorProps: {
+            attributes: {
+                class: "ProseMirror focus:outline-none",
+                tabindex: "0"
+            }
+        },
         immediatelyRender: false,
     });
 
+    // Set initial content only when editor is first created and empty
     useEffect(() => {
-        if (editor) {
-            editor.commands.setContent(initialContent || "", false);
-            if (viewMode === "code") {
-                setHtmlCode(beautify.html(initialContent || "", { indent_size: 2 }));
+        if (editor && initialContent && !editor.getHTML().trim() && initialContent.trim()) {
+            editor.commands.setContent(initialContent, false);
+        }
+    }, [editor]);
+
+    // Sync external content changes (when content is loaded from outside)
+    useEffect(() => {
+        if (editor && initialContent && initialContent.trim()) {
+            const currentContent = editor.getHTML();
+            if (currentContent !== initialContent && currentContent.trim() === "") {
+                // Only set content if editor is empty and we have external content
+                editor.commands.setContent(initialContent, false);
             }
         }
-    }, [editor, initialContent, viewMode]);
+    }, [editor, initialContent]);
 
     useEffect(() => {
         if (editor && viewMode === "code") {
@@ -231,11 +263,11 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
         [editor, isReplacingImage, toast]
     );
 
-    if (!isClient) return <div className="border rounded-md p-4">Loading editor...</div>;
-    if (!editor) return <div className="border rounded-md p-4">Initializing editor...</div>;
+    if (!isClient) return <div className="border rounded-md p-4 min-h-[200px]">Loading editor...</div>;
+    if (!editor) return <div className="border rounded-md p-4 min-h-[200px]">Initializing editor...</div>;
 
     return (
-        <div className="border rounded-md">
+        <div className="border rounded-md" onClick={() => editor?.commands.focus()}>
             <div className="flex flex-wrap items-center gap-1 p-2 border-b">
                 {/* Basic Formatting */}
                 <Toggle
@@ -305,7 +337,10 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 <Toggle
                     size="sm"
                     pressed={editor.isActive("bulletList")}
-                    onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+                    onPressedChange={() => {
+                        console.log('Toggle bullet list, isActive:', editor.isActive("bulletList"));
+                        editor.chain().focus().toggleBulletList().run();
+                    }}
                     aria-label="Toggle bullet list"
                 >
                     <ListIcon className="h-4 w-4" />
@@ -313,7 +348,10 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 <Toggle
                     size="sm"
                     pressed={editor.isActive("orderedList")}
-                    onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+                    onPressedChange={() => {
+                        console.log('Toggle ordered list, isActive:', editor.isActive("orderedList"));
+                        editor.chain().focus().toggleOrderedList().run();
+                    }}
                     aria-label="Toggle ordered list"
                 >
                     <ListOrderedIcon className="h-4 w-4" />
@@ -538,7 +576,17 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
             </div>
 
             {viewMode === "preview" ? (
-                <EditorContent editor={editor} className="min-h-[200px] max-h-[500px] overflow-y-auto" />
+                <div
+                    className="min-h-[200px] max-h-[500px] overflow-y-auto prose prose-sm sm:prose lg:prose-lg focus-within:outline-none"
+                    onClick={() => editor?.commands.focus()}
+                    style={{
+                        cursor: 'text',
+                        padding: '12px',
+                        lineHeight: '1.6'
+                    }}
+                >
+                    <EditorContent editor={editor} />
+                </div>
             ) : (
                 <CodeMirror
                     value={htmlCode}

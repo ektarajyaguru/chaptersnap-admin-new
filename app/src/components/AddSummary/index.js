@@ -180,18 +180,22 @@ function AddSummary({ bookId, onSummaryAdded }) {
             </AccordionSummary>
 
             <AccordionDetails>
-              {isExpanded && (
-                <Box
-                  sx={{
-                    border: "1px solid rgba(0,0,0,0.2)",
-                    borderRadius: "10px",
-                    padding: 1,
-                    mt: 1,
-                    maxHeight: "50vh",
-                    overflowY: "auto",
-                  }}
-                >
+              <Box
+                sx={{
+                  border: "1px solid rgba(0,0,0,0.2)",
+                  borderRadius: "10px",
+                  padding: 1,
+                  mt: 1,
+                  maxHeight: "50vh",
+                  overflowY: "auto",
+                  position: "relative",
+                  zIndex: 1,
+                  minHeight: isExpanded ? "200px" : "auto",
+                }}
+              >
+                {isExpanded && (
                   <RichTextEditor
+                    key={`editor-${section.id}`}
                     initialContent={editorContents[index] || ""}
                     onChange={(value) =>
                       setEditorContents((prev) =>
@@ -200,8 +204,8 @@ function AddSummary({ bookId, onSummaryAdded }) {
                     }
                     placeholder="Write your summary here..."
                   />
-                </Box>
-              )}
+                )}
+              </Box>
             </AccordionDetails>
 
             {summaryErrors.includes(section.id) && (
