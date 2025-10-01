@@ -1,0 +1,32 @@
+.banner-gallery {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gallery-container {
+  width: 100%;
+}
+
+.gallery-images {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.gallery-image {
+  width: 20%;
+  height: 220px;
+  margin: 0 2% 10px 2%;
+  box-sizing: border-box;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 20vh;
+}
+
+.loading-massage {
+  margin-top: "10px";
+}

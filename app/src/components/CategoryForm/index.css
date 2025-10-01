@@ -1,0 +1,8 @@
+.page-container {
+  margin-top: 15px;
+}
+.table-container {
+  border: 1px solid rgb(226, 222, 222);
+  border-radius: 15px;
+  padding: 10px;
+}
