@@ -315,3 +315,74 @@ export async function deleteImage(id: string) {
   revalidatePath("/admin/dashboard/gallery")
   return { error: null }
 }
+
+export async function publishBook(formData: FormData) {
+  const supabase = await createClient()
+  const bookName = (formData.get("bookName") as string) || ""
+  const author = (formData.get("author") as string) || ""
+  const url = (formData.get("url") as string) || ""
+  const metaTitle = (formData.get("metaTitle") as string) || ""
+  const metaDescription = (formData.get("metaDescription") as string) || ""
+  const categoriesJson = (formData.get("categories") as string) || "[]"
+  const image = formData.get("image") as File | null
+  const selectedImageUrl = (formData.get("selectedImageUrl") as string) || ""
+  const selectedUrl = (formData.get("selectedUrl") as string) || ""
+  const summarySectionsJson = (formData.get("summarySections") as string) || "[]"
+
+  let imagePath: string | null = null
+
+  // If an image URL is selected from gallery, use that
+  if (selectedImageUrl) {
+    imagePath = selectedImageUrl
+  }
+  // Otherwise, handle file upload
+  else if (image) {
+    const bucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "gallery"
+    imagePath = `book-images/${Date.now()}_${image.name}`
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(imagePath, image, { upsert: true })
+    if (uploadError) {
+      console.error("Image upload failed:", uploadError)
+      return { error: "Failed to upload image" }
+    }
+  }
+
+  // Parse categories and summary sections
+  let categories: string[] = []
+  let summarySections: any[] = []
+
+  try {
+    categories = JSON.parse(categoriesJson)
+  } catch (e) {
+    console.error("Error parsing categories:", e)
+    categories = []
+  }
+
+  try {
+    summarySections = JSON.parse(summarySectionsJson)
+  } catch (e) {
+    console.error("Error parsing summary sections:", e)
+    summarySections = []
+  }
+
+  const { error } = await supabase.from("book").insert({
+    bookName,
+    bookNameLowerCase: bookName.toLowerCase(),
+    author,
+    url: selectedUrl || url, // Use selectedUrl if available, otherwise fallback to url field
+    metaTitle,
+    metaDescription,
+    categories,
+    image: imagePath,
+    summarySections,
+    timestamp: new Date().toISOString(),
+    count: 0,
+  })
+
+  if (error) {
+    console.error("Insert book failed:", error)
+    return { error: "Failed to publish book" }
+  }
+
+  revalidatePath("/admin/bookslist")
+  return { success: true }
+}
