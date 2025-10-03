@@ -14,11 +14,13 @@ interface ImageMetadata {
   url: string // Public URL derived from path
 }
 
-// Utility function to convert Supabase storage path to CDN URL
-function getCdnUrl(storagePath: string): string {
+// Utility function to convert Supabase storage path to public URL
+function getSupabaseStorageUrl(storagePath: string): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'gallery'
   // Remove the bucket name if it's included in the path
-  const cleanPath = storagePath.replace(/^blog-images\//, '')
-  return `https://cdn.marketricka.com/blog-images/${cleanPath}`
+  const cleanPath = storagePath.replace(new RegExp(`^${bucketName}\\/`, ''), '')
+  return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${cleanPath}`
 }
 
 export async function uploadImage(formData: FormData) {
@@ -72,12 +74,12 @@ export async function uploadImage(formData: FormData) {
       const shouldConvertToWebP = fileExt !== "webp"
       const finalFileExt = shouldConvertToWebP ? "webp" : fileExt
       fileName = `${safeFileName}.${finalFileExt}`
-      filePath = `gallery/${fileName}`
+      filePath = `book-images/${fileName}`
       
       // Check if file already exists and add timestamp if needed
       const { data: existingFiles } = await supabase.storage
-        .from("blog-images")
-        .list("gallery", {
+        .from("gallery")
+        .list("book-images", {
           search: fileName
         })
       
@@ -85,7 +87,7 @@ export async function uploadImage(formData: FormData) {
         // File exists, add timestamp to make it unique
         const timestamp = Date.now()
         fileName = `${safeFileName}-${timestamp}.${finalFileExt}`
-        filePath = `gallery/${fileName}`
+        filePath = `book-images/${fileName}`
       }
 
       let sharpInstance = sharp(buffer)
@@ -137,23 +139,23 @@ export async function uploadImage(formData: FormData) {
 
       // Ensure unique filename for non-processed files too
       fileName = `${safeFileName}.${fileExt}`;
-      filePath = `gallery/${fileName}`;
+      filePath = `book-images/${fileName}`;
 
       const { data: existingFiles } = await supabase.storage
-        .from("blog-images")
-        .list("gallery", { search: fileName });
+        .from("gallery")
+        .list("book-images", { search: fileName });
       
       if (existingFiles && existingFiles.length > 0) {
         const timestamp = Date.now();
         fileName = `${safeFileName}-${timestamp}.${fileExt}`;
-        filePath = `gallery/${fileName}`;
+        filePath = `book-images/${fileName}`;
       }
     }
 
     console.log("Uploading image to storage...")
     // 1. Upload image to storage
     const { data: storageData, error: storageError } = await supabase.storage
-      .from("blog-images")
+      .from("gallery")
       .upload(filePath, processedFile, {
         cacheControl: "3600",
         upsert: false,
@@ -184,17 +186,17 @@ export async function uploadImage(formData: FormData) {
     if (dbError) {
       console.error("Error inserting image metadata into DB:", dbError)
       // If DB insert fails, attempt to delete the uploaded file
-      await supabase.storage.from("blog-images").remove([filePath])
+      await supabase.storage.from("gallery").remove([filePath])
       return { error: dbError.message || "Failed to save image metadata. File upload rolled back." }
     }
 
-    // Return CDN URL instead of Supabase URL
-    const cdnUrl = getCdnUrl(filePath)
+    // Return Supabase storage URL
+    const storageUrl = getSupabaseStorageUrl(filePath)
 
     revalidatePath("/dashboard/articles/new")
     revalidatePath("/dashboard/articles/[id]/edit")
     revalidatePath("/dashboard/gallery")
-    return { url: cdnUrl, path: filePath, id: dbData.id }
+    return { url: storageUrl, path: filePath, id: dbData.id }
   } catch (error: any) {
     console.error("Caught error in uploadImage Server Action:", error)
     // This catch block will handle errors thrown *before* the supabase.storage.upload call
@@ -231,7 +233,7 @@ export async function getImages({ limit = 20, offset = 0 }: GetImagesOptions = {
   const imagesWithUrls: ImageMetadata[] = data.map((item) => {
     return {
       ...item,
-      url: getCdnUrl(item.path),
+      url: getSupabaseStorageUrl(item.path),
     }
   })
 
@@ -265,7 +267,7 @@ export async function searchImages({ query, limit = 20, offset = 0 }: SearchImag
   const imagesWithUrls: ImageMetadata[] = data.map((item) => {
     return {
       ...item,
-      url: getCdnUrl(item.path),
+      url: getSupabaseStorageUrl(item.path),
     }
   })
 
@@ -299,7 +301,7 @@ export async function deleteImage(id: string) {
   }
 
   // 3. Delete the actual file from storage
-  const { error: storageError } = await supabase.storage.from("blog-images").remove([imagePath])
+  const { error: storageError } = await supabase.storage.from("gallery").remove([imagePath])
 
   if (storageError) {
     console.error("Error deleting image from storage:", storageError)

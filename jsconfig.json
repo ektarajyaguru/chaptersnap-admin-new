@@ -9,8 +9,8 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": false,
     "noEmit": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
@@ -43,19 +43,12 @@
       "@/assets/*": [
         "app/src/assets/*"
       ]
-    },
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
+    "**/*.js",
+    "**/*.jsx",
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules"

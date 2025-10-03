@@ -12,6 +12,9 @@ import Highlight from "@tiptap/extension-highlight";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
 import Image from "@tiptap/extension-image";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
 
 import {
     BoldIcon,
@@ -57,7 +60,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/lib/components/ui/pop
 import { uploadImage } from "../../../../lib/actions";
 import { useToast } from "../../../../hooks/use-toast";
 import beautify from "js-beautify";
-import "prosemirror-view/style/prosemirror.css";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { html } from "@codemirror/lang-html";
@@ -67,6 +69,7 @@ import { lineNumbers } from "@codemirror/view";
 import { history, historyKeymap, defaultKeymap } from "@codemirror/commands";
 import { keymap } from "@codemirror/view";
 import { dracula } from "@uiw/codemirror-theme-dracula";
+
 
 // import { ImageGalleryDialog } from "./image-gallery-dialog";
 // import { TiptapImageNodeView } from "./tiptap-image-node-view";
@@ -84,6 +87,7 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
 
     useEffect(() => {
         setIsClient(true);
+
         const checkDarkMode = () => {
             const isDark =
                 (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ||
@@ -107,18 +111,25 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 blockquote: true,
                 codeBlock: true,
                 history: true,
-                bulletList: {
-                    keepMarks: true,
-                    keepAttributes: false,
+                // Disable built-in lists to use our explicit extensions
+                bulletList: false,
+                orderedList: false,
+                listItem: false,
+            }),
+            // Explicitly add list extensions
+            BulletList.configure({
+                HTMLAttributes: {
+                    class: 'prose-bullet-list',
                 },
-                orderedList: {
-                    keepMarks: true,
-                    keepAttributes: false,
+            }),
+            OrderedList.configure({
+                HTMLAttributes: {
+                    class: 'prose-ordered-list',
                 },
-                listItem: {
-                    HTMLAttributes: {
-                        class: 'prose-list-item',
-                    },
+            }),
+            ListItem.configure({
+                HTMLAttributes: {
+                    class: 'prose-list-item',
                 },
             }),
             Link.configure({
@@ -175,7 +186,6 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
         },
         onUpdate: ({ editor }) => {
             const currentHtml = editor.getHTML();
-            console.log('Editor content updated:', currentHtml);
             onChange(currentHtml);
             setHtmlCode(currentHtml);
         },
@@ -337,10 +347,7 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 <Toggle
                     size="sm"
                     pressed={editor.isActive("bulletList")}
-                    onPressedChange={() => {
-                        console.log('Toggle bullet list, isActive:', editor.isActive("bulletList"));
-                        editor.chain().focus().toggleBulletList().run();
-                    }}
+                    onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
                     aria-label="Toggle bullet list"
                 >
                     <ListIcon className="h-4 w-4" />
@@ -348,10 +355,7 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
                 <Toggle
                     size="sm"
                     pressed={editor.isActive("orderedList")}
-                    onPressedChange={() => {
-                        console.log('Toggle ordered list, isActive:', editor.isActive("orderedList"));
-                        editor.chain().focus().toggleOrderedList().run();
-                    }}
+                    onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
                     aria-label="Toggle ordered list"
                 >
                     <ListOrderedIcon className="h-4 w-4" />
@@ -577,12 +581,10 @@ export function RichTextEditor({ initialContent, onChange, placeholder }) {
 
             {viewMode === "preview" ? (
                 <div
-                    className="min-h-[200px] max-h-[500px] overflow-y-auto prose prose-sm sm:prose lg:prose-lg focus-within:outline-none"
+                    className="min-h-[200px] max-h-[500px] overflow-y-auto focus-within:outline-none"
                     onClick={() => editor?.commands.focus()}
                     style={{
-                        cursor: 'text',
-                        padding: '12px',
-                        lineHeight: '1.6'
+                        cursor: 'text'
                     }}
                 >
                     <EditorContent editor={editor} />

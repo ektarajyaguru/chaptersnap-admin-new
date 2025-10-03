@@ -20,7 +20,7 @@ import React, { Component } from "react";
 
 import { Dropdown, Badge, Button, Form } from "react-bootstrap";
 
-import sideBarImage1 from "assets/img/sidebar-1.jpg";
+// import sideBarImage1 from "assets/img/sidebar-1.jpg";
 
 function FixedPlugin({
   hasImage,
