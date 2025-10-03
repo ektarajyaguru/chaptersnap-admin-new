@@ -1,12 +1,6 @@
 'use client';
 
 import './globals.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import './styles/css/animate.min.css';
-import './styles/css/light-bootstrap-dashboard-react.css';
-import './styles/css/demo.css';
-
 import { usePathname } from 'next/navigation';
 import AdminLayout from './admin/AdminLayout';
 

@@ -1,23 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import EditIcon from "@mui/icons-material/Edit";
-import Modal from "@mui/material/Modal";
-import Box from "@mui/material/Box";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-} from "@mui/material";
+import { Button } from "@/lib/components/ui/button";
+import { Input } from "@/lib/components/ui/input";
+import { Label } from "@/lib/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/lib/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/lib/components/ui/table";
+import { Badge } from "@/lib/components/ui/badge";
+import { TrashIcon, PencilIcon, XIcon, CheckCircleIcon, PlusIcon } from "lucide-react";
 import ConfirmationModal from "components/Modals";
 import Notification from "components/Notification";
 import {
@@ -161,63 +150,66 @@ export default function StickyHeadTable() {
 
   const renderValues = () => {
     return (
-      <div className="page-container">
-        <TableContainer className="table-container">
-          <Table stickyHeader aria-label="sticky table">
-            <TableHead>
-              <TableRow
-                sx={{
-                  "&th": {
-                    color: "rgba(96, 96, 96)",
-                    backgroundColor: "rgba(228, 228, 234, 0.688)",
-                  },
-                }}
-              >
-                <TableCell>Category</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Action</TableCell>
+      <div className="w-full">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {categories.map((row, index) => (
+              <TableRow key={index} className="hover:bg-muted/50">
+                <TableCell className="font-medium">{row.name}</TableCell>
+                <TableCell>
+                  <Badge variant={row.status === "Active" ? "default" : "destructive"}>
+                    {row.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(index)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                  </Button>
+                  {row.status === "Active" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCancelIconClick(index)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                  {row.status === "Inactive" ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleStatus(index)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <CheckCircleIcon className="h-4 w-4" />
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(index)}
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {categories.map((row, index) => (
-                <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>
-                    <Chip
-                      variant="outlined"
-                      label={row.status}
-                      color={row.status === "Active" ? "success" : "error"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <EditIcon
-                      sx={{ marginRight: "15px" }}
-                      onClick={() => handleEdit(index)}
-                      color="primary"
-                    />
-                    {row.status === "Active" ? (
-                      <CancelIcon
-                        sx={{ marginRight: "15px" }}
-                        color="warning"
-                        onClick={() => handleCancelIconClick(index)}
-                      />
-                    ) : null}
-                    {row.status === "Inactive" ? (
-                      <CheckCircleIcon
-                        onClick={() => handleToggleStatus(index)}
-                        color="success"
-                      />
-                    ) : null}
-                    <DeleteIcon
-                      onClick={() => handleDelete(index)}
-                      color="error"
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   };
@@ -230,39 +222,34 @@ export default function StickyHeadTable() {
           severity={notification.severity}
         />
       )}
-      <Button
-        variant="contained"
-        onClick={handleOpenModal}
-        style={{ marginBottom: "15px" }}
-      >
-        Add Category
-      </Button>
-      <Modal open={isOpen} onClose={handleCloseModal}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            minWidth: 350,
-          }}
-        >
-          <Stack spacing={3}>
-            <TextField
-              label="Enter a value"
-              value={inputValue}
-              onChange={handleInputChange}
-            />
-            {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-            <Button variant="contained" onClick={handleSubmit}>
+      <Dialog open={isOpen} onOpenChange={handleCloseModal}>
+        <DialogTrigger asChild>
+          <Button className="mb-4">
+            <PlusIcon className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editIndex === -1 ? "Add Category" : "Edit Category"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="category-input">Category Name</Label>
+              <Input
+                id="category-input"
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder="Enter category name"
+              />
+            </div>
+            {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
+            <Button onClick={handleSubmit} className="w-full">
               {editIndex === -1 ? "Submit" : "Update"}
             </Button>
-          </Stack>
-        </Box>
-      </Modal>
+          </div>
+        </DialogContent>
+      </Dialog>
       {renderValues()}
       {confirmDelete && (
         <ConfirmationModal

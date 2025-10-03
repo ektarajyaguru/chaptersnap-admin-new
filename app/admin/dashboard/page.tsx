@@ -1,20 +1,9 @@
 'use client';
 
 import React from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  Navbar,
-  Nav,
-  Table,
-  Container,
-  Row,
-  Col,
-  Form,
-  OverlayTrigger,
-  Tooltip,
-} from 'react-bootstrap';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/lib/components/ui/card";
+import { Badge } from "@/lib/components/ui/badge";
+import { Button } from "@/lib/components/ui/button";
 import {
   LineChart,
   Line,
@@ -30,6 +19,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { TrendingUp, DollarSign, AlertCircle, Users, RotateCcw } from "lucide-react";
 
 const lineData = [
   { time: '9AM', series1: 287, series2: 67, series3: 23 },
@@ -66,126 +56,155 @@ const barData = [
 ];
 
 export default function Dashboard() {
+  const statsCards = [
+    {
+      title: 'Number',
+      value: '150GB',
+      icon: TrendingUp,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+      description: 'Update Now'
+    },
+    {
+      title: 'Revenue',
+      value: '$ 1,345',
+      icon: DollarSign,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100',
+      description: 'Update Now'
+    },
+    {
+      title: 'Errors',
+      value: '23',
+      icon: AlertCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100',
+      description: 'Update Now'
+    },
+    {
+      title: 'Followers',
+      value: '+45K',
+      icon: Users,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+      description: 'Update Now'
+    },
+  ];
+
   return (
-    <Container fluid>
-      <Row>
-        {/* Stats Cards */}
-        {[
-          { title: 'Number', value: '150GB', icon: 'nc-chart text-warning' },
-          { title: 'Revenue', value: '$ 1,345', icon: 'nc-light-3 text-success' },
-          { title: 'Errors', value: '23', icon: 'nc-vector text-danger' },
-          { title: 'Followers', value: '+45K', icon: 'nc-favourite-28 text-primary' },
-        ].map((card, idx) => (
-          <Col lg="3" sm="6" key={idx}>
-            <Card className="card-stats">
-              <Card.Body>
-                <Row>
-                  <Col xs="5">
-                    <div className="icon-big text-center icon-warning">
-                      <i className={`nc-icon ${card.icon}`}></i>
-                    </div>
-                  </Col>
-                  <Col xs="7">
-                    <div className="numbers">
-                      <p className="card-category">{card.title}</p>
-                      <Card.Title as="h4">{card.value}</Card.Title>
-                    </div>
-                  </Col>
-                </Row>
-              </Card.Body>
-              <Card.Footer>
-                <hr />
-                <div className="stats">
-                  <i className="fas fa-redo mr-1"></i>
-                  Update Now
-                </div>
-              </Card.Footer>
-            </Card>
-          </Col>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {statsCards.map((card, idx) => (
+          <Card key={idx}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {card.title}
+              </CardTitle>
+              <div className={`p-2 rounded-full ${card.bgColor}`}>
+                <card.icon className={`h-4 w-4 ${card.color}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{card.value}</div>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <RotateCcw className="h-3 w-3" />
+                {card.description}
+              </p>
+            </CardContent>
+          </Card>
         ))}
-      </Row>
+      </div>
 
-      <Row>
-        <Col md="8">
-          <Card>
-            <Card.Header>
-              <Card.Title as="h4">Users Behavior</Card.Title>
-              <p className="card-category">24 Hours performance</p>
-            </Card.Header>
-            <Card.Body>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={lineData} margin={{ right: 50 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" />
-                  <YAxis />
+      {/* Charts Row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Users Behavior</CardTitle>
+            <CardDescription>24 Hours performance</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={lineData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="time" />
+                <YAxis />
+                <RechartsTooltip />
+                <Legend />
+                <Line type="monotone" dataKey="series1" stroke="#8884d8" />
+                <Line type="monotone" dataKey="series2" stroke="#82ca9d" />
+                <Line type="monotone" dataKey="series3" stroke="#ffc658" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Email Statistics</CardTitle>
+            <CardDescription>Last Campaign Performance</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
                   <RechartsTooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="series1" stroke="#8884d8" />
-                  <Line type="monotone" dataKey="series2" stroke="#82ca9d" />
-                  <Line type="monotone" dataKey="series3" stroke="#ffc658" />
-                </LineChart>
-              </ResponsiveContainer>
-            </Card.Body>
-          </Card>
-        </Col>
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
-        <Col md="4">
-          <Card>
-            <Card.Header>
-              <Card.Title as="h4">Email Statistics</Card.Title>
-              <p className="card-category">Last Campaign Performance</p>
-            </Card.Header>
-            <Card.Body>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      {/* Sales and Tasks Row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>2017 Sales</CardTitle>
+            <CardDescription>All products including Taxes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={barData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <RechartsTooltip />
+                <Legend />
+                <Bar dataKey="Tesla" fill="#8884d8" />
+                <Bar dataKey="BMW" fill="#82ca9d" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-      <Row>
-        <Col md="6">
-          <Card>
-            <Card.Header>
-              <Card.Title as="h4">2017 Sales</Card.Title>
-              <p className="card-category">All products including Taxes</p>
-            </Card.Header>
-            <Card.Body>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={barData} margin={{ right: 50 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <RechartsTooltip />
-                  <Legend />
-                  <Bar dataKey="Tesla" fill="#8884d8" />
-                  <Bar dataKey="BMW" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Tasks Card (unchanged) */}
-        <Col md="6">
-          <Card className="card-tasks">
-            <Card.Header>
-              <Card.Title as="h4">Tasks</Card.Title>
-              <p className="card-category">Backend development</p>
-            </Card.Header>
-            <Card.Body>
-              {/* Keep your existing tasks table here */}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+        <Card>
+          <CardHeader>
+            <CardTitle>Tasks</CardTitle>
+            <CardDescription>Backend development</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Example tasks - you can replace this with your actual tasks */}
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm">Complete API integration</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm">Update user authentication</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm">Fix responsive layout issues</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

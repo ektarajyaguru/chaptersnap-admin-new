@@ -4,27 +4,6 @@
 /* Google Font (Lexend Deca) */
 @import url("https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@200&display=swap");
 
-/* Legacy project CSS */
-@import "bootstrap/dist/css/bootstrap.min.css";
-@import "./styles/css/animate.min.css";
-@import "./styles/css/demo.css";
-@import "./styles/css/light-bootstrap-dashboard-react.css";
-@import "@fortawesome/fontawesome-free/css/all.min.css";
-@import "tw-animate-css";
-
-/* Nucleo Icons Font */
-@font-face {
-  font-family: 'nucleo-icons';
-  src: url('/fonts/nucleo-icons.eot'); /* IE9 Compat */
-  src: url('/fonts/nucleo-icons.eot?#iefix') format('embedded-opentype'),
-       url('/fonts/nucleo-icons.woff2') format('woff2'),
-       url('/fonts/nucleo-icons.woff') format('woff'),
-       url('/fonts/nucleo-icons.ttf') format('truetype'),
-       url('/fonts/nucleo-icons.svg#nucleo-icons') format('svg');
-  font-weight: normal;
-  font-style: normal;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 /* Theme variables */

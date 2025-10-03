@@ -1,19 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Typography,
-  Button,
-  TextField,
-  CircularProgress,
-  Box,
-} from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import SaveIcon from "@mui/icons-material/Save";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Button } from "@/lib/components/ui/button";
+import { Input } from "@/lib/components/ui/input";
+import { Label } from "@/lib/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/lib/components/ui/collapsible";
+import { Card, CardContent, CardHeader, CardTitle } from "@/lib/components/ui/card";
+import { Separator } from "@/lib/components/ui/separator";
+import { Badge } from "@/lib/components/ui/badge";
+import { PlusIcon, TrashIcon, SaveIcon, ChevronDownIcon, LoaderIcon } from "lucide-react";
 import { createClient } from "../../../../lib/supabase/client";
 import { RichTextEditor } from "@/components/RichTextEditor";
 
@@ -23,7 +18,7 @@ function AddSummary({ bookId, onSummaryAdded }) {
   const [mounted, setMounted] = useState(false);
   const [summaries, setSummaries] = useState([]);
   const [editorContents, setEditorContents] = useState([]);
-  const [expanded, setExpanded] = useState(null);
+  const [expanded, setExpanded] = useState<string | false>(false);
   const [summaryErrors, setSummaryErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -32,8 +27,8 @@ function AddSummary({ bookId, onSummaryAdded }) {
     setMounted(true);
   }, []);
 
-  const handleChange = (panel) => (_, isExpanded) => {
-    setExpanded(isExpanded ? panel : false);
+  const handleChange = (panel: string) => {
+    setExpanded(expanded === panel ? false : panel);
     setSummaryErrors([]);
   };
 
@@ -47,13 +42,13 @@ function AddSummary({ bookId, onSummaryAdded }) {
     setExpanded(`panel${newId}`);
   };
 
-  const handleDeleteAccordion = (id) => {
+  const handleDeleteAccordion = (id: string) => {
     const index = summaries.findIndex((s) => s.id === id);
     if (index !== -1) {
       setSummaries((prev) => prev.filter((s) => s.id !== id));
       setEditorContents((prev) => prev.filter((_, i) => i !== index));
     }
-    if (expanded === `panel${id}`) setExpanded(null);
+    if (expanded === `panel${id}`) setExpanded(false);
   };
 
 
@@ -107,126 +102,112 @@ function AddSummary({ bookId, onSummaryAdded }) {
   if (!mounted) return null; // ✅ Prevents Editor rendering before mount
 
   return (
-    <Box>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={handleAddSummary}
-        sx={{ mt: 2 }}
-      >
+    <div className="space-y-4">
+      <Button onClick={handleAddSummary} className="w-full">
+        <PlusIcon className="w-4 h-4 mr-2" />
         Add More Summary
       </Button>
 
       {summaries.map((section, index) => {
-        const panelKey = `panel${section.id}`;
-        const isExpanded = expanded === panelKey;
+        const isExpanded = expanded === `panel${section.id}`;
 
         return (
-          <Accordion
-            key={section.id}
-            sx={{ width: "90%", mt: 2 }}
-            expanded={isExpanded}
-            onChange={handleChange(panelKey)}
-          >
-            <AccordionSummary
-              expandIcon={
-                <i
-                  className={isExpanded ? "fa fa-caret-up" : "fa fa-caret-down"}
-                />
-              }
-              aria-controls={`${panelKey}-content`}
-              id={`${panelKey}-header`}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                <TextField
-                  id={`duration${section.id}`}
-                  placeholder="ex. 2 min"
-                  type="number"
-                  value={section.duration}
-                  error={summaryErrors.includes(section.id)}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d*$/.test(val)) {
-                      setSummaries((prev) =>
-                        prev.map((s) =>
-                          s.id === section.id ? { ...s, duration: val } : s
+          <Card key={section.id} className="w-full">
+            <Collapsible open={isExpanded} onOpenChange={() => handleChange(`panel${section.id}`)}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="space-y-1">
+                        <Label htmlFor={`duration${section.id}`} className="text-xs text-muted-foreground">
+                          Duration (minutes)
+                        </Label>
+                        <Input
+                          id={`duration${section.id}`}
+                          placeholder="ex. 2 min"
+                          type="number"
+                          value={section.duration}
+                          className={`w-24 ${summaryErrors.includes(section.id) ? 'border-destructive' : ''}`}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setSummaries((prev) =>
+                                prev.map((s) =>
+                                  s.id === section.id ? { ...s, duration: val } : s
+                                )
+                              );
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">Summary {index + 1}</Badge>
+                        <span className="text-sm text-muted-foreground">Click to expand</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAccordion(section.id);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                      <ChevronDownIcon className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="border rounded-lg p-4 bg-muted/20">
+                    <RichTextEditor
+                      key={`editor-${section.id}`}
+                      initialContent={editorContents[index] || ""}
+                      onChange={(value) =>
+                        setEditorContents((prev) =>
+                          prev.map((content, idx) => (idx === index ? value : content))
                         )
-                      );
-                    }
-                  }}
-                  required
-                  sx={{ mr: 2 }}
-                />
-                <Typography sx={{ color: "text.secondary" }}>
-                  Add Summary Here
-                </Typography>
-                <Box
-                  onClick={() => handleDeleteAccordion(section.id)}
-                  sx={{
-                    ml: "auto",
-                    bgcolor: "white",
-                    border: "1px solid #f6acac",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <DeleteIcon />
-                </Box>
-              </Box>
-            </AccordionSummary>
+                      }
+                      placeholder="Write your summary here..."
+                    />
+                  </div>
 
-            <AccordionDetails>
-              <Box
-                sx={{
-                  border: "1px solid rgba(0,0,0,0.2)",
-                  borderRadius: "10px",
-                  padding: 1,
-                  mt: 1,
-                  maxHeight: "50vh",
-                  overflowY: "auto",
-                  position: "relative",
-                  zIndex: 1,
-                  minHeight: isExpanded ? "200px" : "auto",
-                }}
-              >
-                {isExpanded && (
-                  <RichTextEditor
-                    key={`editor-${section.id}`}
-                    initialContent={editorContents[index] || ""}
-                    onChange={(value) =>
-                      setEditorContents((prev) =>
-                        prev.map((content, idx) => (idx === index ? value : content))
-                      )
-                    }
-                    placeholder="Write your summary here..."
-                  />
-                )}
-              </Box>
-            </AccordionDetails>
+                  {summaryErrors.includes(section.id) && (
+                    <p className="text-sm text-destructive mt-2">
+                      Please provide a valid duration and summary.
+                    </p>
+                  )}
 
-            {summaryErrors.includes(section.id) && (
-              <Typography variant="caption" color="error">
-                Please provide a valid duration and summary.
-              </Typography>
-            )}
-
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<SaveIcon />}
-              onClick={() => handleSave(index)}
-              sx={{ mt: 1 }}
-            >
-              {!loading ? "Save" : <CircularProgress size={24} color="inherit" />}
-            </Button>
-          </Accordion>
+                  <Button
+                    onClick={() => handleSave(index)}
+                    className="mt-4"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <LoaderIcon className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <SaveIcon className="w-4 h-4 mr-2" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
         );
       })}
-    </Box>
+    </div>
   );
 }
 
