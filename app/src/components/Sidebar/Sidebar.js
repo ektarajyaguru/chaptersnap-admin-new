@@ -64,6 +64,12 @@ export default function Sidebar({ color, image }) {
               <p>Notification Form</p>
             </Link>
           </li>
+          <li>
+            <Link href="/admin/gallery" className="nav-link">
+              <i className="nc-icon nc-bell-55" />
+              <p>Gallery</p>
+            </Link>
+          </li>
         </Nav>
       </div>
     </div>
