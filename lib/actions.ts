@@ -193,9 +193,9 @@ export async function uploadImage(formData: FormData) {
     // Return Supabase storage URL
     const storageUrl = getSupabaseStorageUrl(filePath)
 
-    revalidatePath("/dashboard/articles/new")
-    revalidatePath("/dashboard/articles/[id]/edit")
-    revalidatePath("/dashboard/gallery")
+    revalidatePath("/admin/dashboard/articles/new")
+    revalidatePath("/admin/dashboard/articles/[id]/edit")
+    revalidatePath("/admin/dashboard/gallery")
     return { url: storageUrl, path: filePath, id: dbData.id }
   } catch (error: any) {
     console.error("Caught error in uploadImage Server Action:", error)
@@ -310,8 +310,8 @@ export async function deleteImage(id: string) {
     return { error: storageError.message }
   }
 
-  revalidatePath("/dashboard/articles/new")
-  revalidatePath("/dashboard/articles/[id]/edit")
-  revalidatePath("/dashboard/gallery")
+  revalidatePath("/admin/dashboard/articles/new")
+  revalidatePath("/admin/dashboard/articles/[id]/edit")
+  revalidatePath("/admin/dashboard/gallery")
   return { error: null }
 }

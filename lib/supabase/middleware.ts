@@ -38,9 +38,9 @@ export async function updateSession(request: NextRequest) {
   // Handle root path redirects
   if (request.nextUrl.pathname === "/") {
     if (user) {
-      // User is authenticated, redirect to dashboard
+      // User is authenticated, redirect to admin dashboard
       const url = request.nextUrl.clone()
-      url.pathname = "/dashboard"
+      url.pathname = "/admin/dashboard"
       return NextResponse.redirect(url)
     } else {
       // User is not authenticated, redirect to login
@@ -54,7 +54,17 @@ export async function updateSession(request: NextRequest) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = "/login"
+    // Preserve the original URL they were trying to access
+    url.searchParams.set("redirectedFrom", request.nextUrl.pathname)
     return NextResponse.redirect(url)
+  }
+
+  // Additional check for admin routes - ensure user has admin access
+  if (user && request.nextUrl.pathname.startsWith("/admin/")) {
+    // For now, we'll allow all authenticated users to access admin routes
+    // In the future, you could add role-based checks here
+    // by querying your admin_users table to verify the user's role
+    return supabaseResponse
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
